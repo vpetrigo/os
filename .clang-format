@@ -1,0 +1,48 @@
+---
+BasedOnStyle: LLVM
+
+IndentWidth: 4
+ColumnLimit: 120
+
+AlignTrailingComments:
+  Kind: Always
+  OverEmptyLines: 2
+
+AllowAllParametersOfDeclarationOnNextLine: true
+AllowShortEnumsOnASingleLine: false
+AllowShortBlocksOnASingleLine: Never
+AllowShortCaseLabelsOnASingleLine: false
+AllowShortFunctionsOnASingleLine: None
+AllowShortIfStatementsOnASingleLine: false
+AllowShortLoopsOnASingleLine: false
+BreakBeforeBraces: Custom
+BraceWrapping:
+  AfterClass: true # false
+  AfterControlStatement: Never # false
+  AfterEnum: true # false
+  AfterFunction: false # false
+  AfterNamespace: true # false
+  AfterObjCDeclaration: true # false
+  AfterStruct: true # false
+  AfterUnion: true # false
+  AfterExternBlock: false # false
+  BeforeCatch: true # false
+  BeforeElse: true # false
+  IndentBraces: false # false
+  SplitEmptyFunction: true
+  SplitEmptyRecord: true
+  SplitEmptyNamespace: true
+
+ReflowComments: false
+
+IncludeBlocks: Preserve
+IncludeCategories:
+  - Regex: '^"(llvm|llvm-c|clang|clang-c)/'
+    Priority: 2
+  - Regex: '^(<|"(gtest|gmock|isl|json)/)'
+    Priority: 3
+  - Regex: '.*'
+    Priority: 1
+SortIncludes: CaseSensitive
+SortUsingDeclarations: Lexicographic
+...
