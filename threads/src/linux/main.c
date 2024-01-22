@@ -1,3 +1,5 @@
+#include "list.h"
+
 #include <signal.h>
 #include <unistd.h>
 
@@ -36,6 +38,7 @@ struct stack_frame
 
 struct thread
 {
+    struct list_head node;
     void *context;
 };
 
@@ -47,8 +50,23 @@ struct stack_frame main_frame = {0};
 struct thread main_thread = {
     .context = &main_frame,
 };
-static struct thread *threads[2];
 static bool should_stop = false;
+
+
+static struct list_head ready;
+static struct thread *current_thread;
+static struct thread *idle_thread;
+
+static struct thread *thread1;
+static struct thread *thread2;
+
+// TODO: add generic thread_entry function
+// void thread_entry(struct thread *thread) {
+//     ...
+//     current_thread = thread;
+//     handler = // get current_thread handler
+//     handler();
+// }
 
 // FUNCTION DEFINITIONS
 
@@ -81,6 +99,10 @@ struct thread *thread_create(thread_entry_f handler)
     return (struct thread *)memory;
 }
 
+void thread_start(struct thread *thread) {
+    list_add_tail(&thread->node, &ready);
+}
+
 void thread_destroy(struct thread *thread) {
     if (thread == NULL) {
         return;
@@ -96,6 +118,8 @@ void thread_switch(struct thread *from, struct thread *to) {
 }
 
 noreturn void handler1(void) {
+    current_thread = thread1;
+
     for (;;) {
         // push rip = handler1
         // push rbp, rdx, r12-15
@@ -107,6 +131,8 @@ noreturn void handler1(void) {
 }
 
 noreturn void handler2(void) {
+    current_thread = thread2;
+
     for (;;) {
         printf("Hello from thread 2\n");
         sleep(2);
@@ -114,29 +140,24 @@ noreturn void handler2(void) {
 }
 
 void handler(int sig_num) {
-    static size_t counter = 0;
-    static size_t iteration = 0;
+    struct thread *to_execute = NULL;
 
-    if (sig_num != SIGALRM) {
-        return;
+    if (!list_empty(&ready)) {
+        // execute something
+        to_execute = (struct thread *)ready.next;
+        list_del(&to_execute->node);
+    } else {
+        printf("Nothing to execute\n");
     }
 
-    const size_t current_thread_id = counter % ARRAY_SIZE(threads);
-    const size_t next_thread_id = (counter + 1) % ARRAY_SIZE(threads);
-
-    ++iteration;
-    ++counter;
-    printf("Schedule switching from %zu to %zu\n", current_thread_id, next_thread_id);
-    //    thread_switch(threads[current_thread_id], threads[next_thread_id]);
-
-    if (iteration < 2) {
-        alarm(2);
-        thread_switch(threads[current_thread_id], threads[next_thread_id]);
+    if (to_execute != NULL) {
+        printf("Is thread 1 %d\n", thread1 == to_execute);
+        printf("Is thread 2 %d\n", thread2 == to_execute);
+        list_add_tail(&to_execute->node, &ready);
     }
-    else {
-        should_stop = true;
-        thread_switch(threads[current_thread_id], &main_thread);
-    }
+
+    alarm(1);
+    thread_switch(current_thread, to_execute);
 }
 
 void *get_pc(void) {
@@ -156,15 +177,15 @@ int main() {
     sa.sa_flags = SA_NODEFER;
 
     sigaction(SIGALRM, &sa, NULL);
-    threads[0] = thread_create(handler1);
-    threads[1] = thread_create(handler2);
-
-    printf("Allocated thread 1 address: %p\n", threads[0]);
-    printf("Allocated thread 2 address: %p\n", threads[1]);
+    list_init(&ready);
+    thread1 = thread_create(handler1);
+    thread2 = thread_create(handler2);
+    thread_start(thread1);
+    thread_start(thread2);
     alarm(1);
-    // TODO: check how to setup proper offset to jump over the `thread_switch()` call
-    main_frame.rip = (uint64_t)(get_pc()) + 1;
-    thread_switch(&main_thread, threads[0]);
+    // // TODO: check how to setup proper offset to jump over the `thread_switch()` call
+    // main_frame.rip = (uint64_t)(get_pc()) + 1;
+    current_thread = &main_thread;
 
     for (;;) {
         if (should_stop) {
@@ -175,8 +196,8 @@ int main() {
     }
 
     printf("Goodbye!");
-    thread_destroy(threads[0]);
-    thread_destroy(threads[1]);
+    // thread_destroy(threads[0]);
+    // thread_destroy(threads[1]);
 
     return 0;
 }
