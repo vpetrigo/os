@@ -18,6 +18,10 @@ static struct thread *current_thread;
 
 // PRIVATE FUNCTION DEFINITIONS
 
+static void thread_set_current(struct thread *this) {
+    current_thread = this;
+}
+
 static void scheduler_tick(int sig_num) {
     struct thread *to_execute = NULL;
 
@@ -31,20 +35,18 @@ static void scheduler_tick(int sig_num) {
     }
 
     if (to_execute != NULL) {
-        // printf("Is thread 1 %d\n", thread1 == to_execute);
-        // printf("Is thread 2 %d\n", thread2 == to_execute);
         list_add_tail(&to_execute->node, &ready);
     }
 
     alarm(1);
+    printf("switch from %p to %p\n", current_thread, to_execute);
     thread_switch(current_thread, to_execute);
+    printf("return to %p\n", current_thread);
+    thread_set_current(current_thread);
 }
 
-static void thread_enter(struct thread *this, thread_entry_f this_handler) {
-    printf("Thread enter: %p\n", this);
-    exit(1);
-    current_thread = this;
-
+void thread_enter(struct thread *this, thread_entry_f this_handler) {
+    thread_set_current(this);
     this_handler();
 }
 
@@ -56,6 +58,7 @@ void thread_temp_set_current_thread(struct thread *thread) {
 
 struct thread *thread_create(thread_entry_f handler)
 {
+    extern void thread_prelude(void);
     const size_t default_stack_size = 4096;
     const size_t to_allocate = default_stack_size + sizeof(struct thread);
     uint8_t *memory = calloc(1, to_allocate);
@@ -74,7 +77,9 @@ struct thread *thread_create(thread_entry_f handler)
     // |                  |
     // |------------------| <--- stack (end) (+ default_stack_size)
     // |------------------| <--- + struct stack_frame
-    frame.rip = (uint64_t)handler;
+    frame.rip = (uint64_t)thread_prelude;
+    frame.r15 = (uint64_t)memory;
+    frame.r14 = (uint64_t)handler;
     thread.context = memory + stack_frame_offset;
     memcpy(memory, &thread, sizeof(thread));
     memset(memory + sizeof(thread), 0xAB, default_stack_size - sizeof(struct stack_frame));
