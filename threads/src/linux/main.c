@@ -42,9 +42,6 @@ static struct thread *thread2;
 // FUNCTION DEFINITIONS
 
 noreturn void handler1(void) {
-    // current_thread = thread1;
-    thread_temp_set_current_thread(thread1);
-
     for (;;) {
         // push rip = handler1
         // push rbp, rdx, r12-15
@@ -56,9 +53,6 @@ noreturn void handler1(void) {
 }
 
 noreturn void handler2(void) {
-    // current_thread = thread2;
-    thread_temp_set_current_thread(thread2);
-
     for (;;) {
         printf("Hello from thread 2\n");
         sleep(2);
@@ -77,11 +71,18 @@ void assert(bool expression) {
 
 int main() {
     thread_scheduler_init(&main_thread);
-    thread1 = thread_create(handler1);
-    thread2 = thread_create(handler2);
-    thread_start(thread1);
-    thread_start(thread2);
+    struct thread *threads[10];
+
+    for (size_t i = 0; i < ARRAY_SIZE(threads); ++i) {
+        threads[i] = thread_create(handler1);
+    }
+
+    for (size_t i = 0; i < ARRAY_SIZE(threads); ++i) {
+        thread_start(threads[i]);
+    }
+
     alarm(1);
+    printf("Thread main address: %p\n", &main_thread);
     // // TODO: check how to setup proper offset to jump over the `thread_switch()` call
     // main_frame.rip = (uint64_t)(get_pc()) + 1;
 
