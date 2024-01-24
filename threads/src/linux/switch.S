@@ -1,5 +1,16 @@
     .text
     .code64
+
+    .extern thread_enter
+
+    .type thread_prelude, @function
+    .global thread_prelude
+thread_prelude:
+    movq %r15, %rdi
+    movq %r14, %rsi
+    call thread_enter
+
+    .type switch_threads_arch, @function
     .global switch_threads_arch
 
 switch_threads_arch:
