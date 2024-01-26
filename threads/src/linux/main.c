@@ -69,7 +69,7 @@ void assert(bool expression) {
     }
 }
 
-int main() {
+int main(void) {
     thread_scheduler_init(&main_thread);
     struct thread *threads[10];
 
