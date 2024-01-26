@@ -13,7 +13,7 @@
 
 // PUBLIC TYPE DECLARATIONS
 
-typedef void (*thread_entry_f)(void);
+typedef void (*thread_entry_f)(void *);
 
 struct thread
 {
@@ -43,7 +43,7 @@ struct stack_frame
 
 // FUNCTION DECLARATIONS
 
-struct thread *thread_create(thread_entry_f handler);
+struct thread *thread_create(thread_entry_f handler, void *arg);
 void thread_start(struct thread *thread);
 void thread_destroy(struct thread *thread);
 void thread_switch(struct thread *from, struct thread *to);

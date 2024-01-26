@@ -47,14 +47,14 @@ static void scheduler_tick(int sig_num) {
     thread_set_current(me);
 }
 
-void thread_enter(struct thread *this, thread_entry_f this_handler) {
+void thread_enter(struct thread *this, thread_entry_f this_handler, void *arg) {
     thread_set_current(this);
-    this_handler();
+    this_handler(arg);
 }
 
 // FUNCTION DEFINITIONS
 
-struct thread *thread_create(thread_entry_f handler)
+struct thread *thread_create(thread_entry_f handler, void *arg)
 {
     extern void thread_prelude(void);
     const size_t default_stack_size = 4096;
@@ -78,6 +78,7 @@ struct thread *thread_create(thread_entry_f handler)
     frame.rip = (uint64_t)thread_prelude;
     frame.r15 = (uint64_t)memory;
     frame.r14 = (uint64_t)handler;
+    frame.r13 = (uint64_t)arg;
     thread.context = memory + stack_frame_offset;
     memcpy(memory, &thread, sizeof(thread));
     memset(memory + sizeof(thread), 0xAB, default_stack_size - sizeof(struct stack_frame));
