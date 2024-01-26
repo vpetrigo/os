@@ -47,9 +47,6 @@ struct thread *thread_create(thread_entry_f handler);
 void thread_start(struct thread *thread);
 void thread_destroy(struct thread *thread);
 void thread_switch(struct thread *from, struct thread *to);
-
-void thread_temp_set_current_thread(struct thread *thread);
-
 void thread_scheduler_init(struct thread *main_thread);
 
 #endif /* THREAD_H */

@@ -24,6 +24,8 @@ static void thread_set_current(struct thread *this) {
 
 static void scheduler_tick(int sig_num) {
     struct thread *to_execute = NULL;
+    struct thread *me = current_thread;
+    printf(" > scheduler in %p thread\n", current_thread);
 
     if (!list_empty(&ready)) {
         // execute something
@@ -39,10 +41,10 @@ static void scheduler_tick(int sig_num) {
     }
 
     alarm(1);
-    printf("switch from %p to %p\n", current_thread, to_execute);
+    printf(" - switch from %p to %p\n", current_thread, to_execute);
     thread_switch(current_thread, to_execute);
-    printf("return to %p\n", current_thread);
-    thread_set_current(current_thread);
+    printf(" + return to context %p\n", me);
+    thread_set_current(me);
 }
 
 void thread_enter(struct thread *this, thread_entry_f this_handler) {
@@ -51,10 +53,6 @@ void thread_enter(struct thread *this, thread_entry_f this_handler) {
 }
 
 // FUNCTION DEFINITIONS
-
-void thread_temp_set_current_thread(struct thread *thread) {
-    current_thread = thread;
-}
 
 struct thread *thread_create(thread_entry_f handler)
 {
