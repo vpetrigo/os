@@ -8,6 +8,7 @@
 thread_prelude:
     movq %r15, %rdi
     movq %r14, %rsi
+    movq %r13, %rdx
     call thread_enter
 
     .type switch_threads_arch, @function
