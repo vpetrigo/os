@@ -72,9 +72,8 @@ int main(void) {
         thread_start(threads[i]);
     }
 
-    // alarm(1);
     printf("Thread main address: %p\n", &main_thread);
-    // // TODO: check how to setup proper offset to jump over the `thread_switch()` call
+    // TODO: check how to setup proper offset to jump over the `thread_switch()` call
     // main_frame.rip = (uint64_t)(get_pc()) + 1;
 
     for (;;) {
