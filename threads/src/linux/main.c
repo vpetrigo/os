@@ -1,3 +1,4 @@
+#include "spin_lock.h"
 #include "thread.h"
 
 #include <signal.h>
@@ -26,6 +27,7 @@ static struct thread *idle_thread;
 
 static struct thread *thread1;
 static struct thread *thread2;
+static struct spin_lock *thread_lock;
 
 // TODO: add generic thread_entry function
 // void thread_entry(struct thread *thread) {
@@ -39,11 +41,24 @@ static struct thread *thread2;
 
 void handler(void *arg) {
     const char *str = arg;
+    size_t counter = 0;
 
-    // for (;;) {
-    printf("Hello from thread '%s'\n", str);
-    sleep(2);
-    // }
+    for (;;) {
+        if (strcmp("a", str) == 0) {
+            spin_lock_lock(thread_lock);
+        }
+
+        printf("Hello from thread '%s'\n", str);
+        sleep(2);
+
+        if (strcmp("a", str) == 0 && counter == 10) {
+            counter = 0;
+            spin_lock_unlock(thread_lock);
+            sleep(2);
+        }
+
+        ++counter;
+    }
 }
 
 void *get_pc(void) {

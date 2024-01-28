@@ -61,4 +61,7 @@ void thread_scheduler_init(struct thread *main_thread);
 
 void thread_scheduler_call(void);
 
+void thread_scheduler_preemtpion_enable(void);
+void thread_scheduler_preemtpion_disable(void);
+
 #endif /* THREAD_H */
