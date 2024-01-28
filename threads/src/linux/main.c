@@ -14,10 +14,6 @@
 #define ARRAY_SIZE(arr) (sizeof(arr) / sizeof(arr[0]))
 #define UNUSED_PARAM __attribute__((unused))
 
-// TYPES
-
-typedef void (*thread_entry_f)(void);
-
 // PRIVATE VARIABLES
 
 // struct stack_frame main_frame = {0};
@@ -41,20 +37,11 @@ static struct thread *thread2;
 
 // FUNCTION DEFINITIONS
 
-noreturn void handler1(void) {
-    for (;;) {
-        // push rip = handler1
-        // push rbp, rdx, r12-15
-        printf("Hello from thread 1\n");
-        // pop rbp, rdx, r12-15
-        // pop rip = handler1
-        sleep(2);
-    }
-}
+noreturn void handler(void *arg) {
+    const char *str = arg;
 
-noreturn void handler2(void) {
     for (;;) {
-        printf("Hello from thread 2\n");
+        printf("Hello from thread '%s'\n", str);
         sleep(2);
     }
 }
@@ -71,10 +58,14 @@ void assert(bool expression) {
 
 int main(void) {
     thread_scheduler_init(&main_thread);
+    const char *ids[] = {
+        "a", "b", "c", "d", "e", "f", "g", "h", "i", "j",
+    };
+
     struct thread *threads[10];
 
     for (size_t i = 0; i < ARRAY_SIZE(threads); ++i) {
-        threads[i] = thread_create(handler1);
+        threads[i] = thread_create(handler, (void *)ids[i]);
     }
 
     for (size_t i = 0; i < ARRAY_SIZE(threads); ++i) {
