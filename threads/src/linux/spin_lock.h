@@ -9,8 +9,7 @@
 
 // PUBLIC TYPES
 
-struct spin_lock {
-};
+struct spin_lock;
 
 // PUBLIC FUNCTION DECLARATIONS
 

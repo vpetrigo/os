@@ -8,6 +8,12 @@
 
 #include "thread.h"
 
+struct spin_lock
+{
+    // core1 lock
+    // core2 lock
+};
+
 // PUBLIC FUNCTION DEFINITIONS
 
 void spin_lock_init(struct spin_lock *lock) {
