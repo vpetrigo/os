@@ -4,11 +4,13 @@
  * \author
  */
 #include "thread.h"
+#include "spin_lock.h"
 
 #include <signal.h>
 #include <unistd.h>
 
-#include <stdint.h>
+#include <stdatomic.h>
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -17,6 +19,9 @@ static struct list_head ready;
 static struct thread *current_thread;
 static struct thread *idle_thread;
 
+static atomic_bool preemt_flag = true;
+static struct spin_lock *scheduler_lock;
+
 // PRIVATE FUNCTION DEFINITIONS
 
 static void thread_set_current(struct thread *this) {
@@ -24,9 +29,15 @@ static void thread_set_current(struct thread *this) {
 }
 
 static void scheduler_tick(int sig_num) {
+    (void)sig_num;
     struct thread *to_execute = NULL;
     struct thread *me = current_thread;
     printf(" > scheduler in %p thread\n", me);
+
+    if (!preemt_flag) {
+        alarm(1);
+        return;
+    }
 
     if (!list_empty(&ready)) {
         // execute something
@@ -43,7 +54,8 @@ static void scheduler_tick(int sig_num) {
 
     if (to_execute->state == THREAD_ACTIVE) {
         list_add_tail(&to_execute->node, &ready);
-    } else {
+    }
+    else {
         puts("Nothing to execute - run idle");
         to_execute = idle_thread;
         current_thread = idle_thread;
@@ -133,12 +145,20 @@ void thread_scheduler_init(struct thread *main_thread) {
     sa.sa_flags = SA_NODEFER;
 
     sigaction(SIGALRM, &sa, NULL);
+    spin_lock_init(&scheduler_lock);
     list_init(&ready);
     current_thread = main_thread;
     idle_thread = main_thread;
 }
 
-void thread_scheduler_call(void)
-{
+void thread_scheduler_call(void) {
     scheduler_tick(SIGALRM);
+}
+
+void thread_scheduler_preemtpion_enable(void) {
+    preemt_flag = true;
+}
+
+void thread_scheduler_preemtpion_disable(void) {
+    preemt_flag = false;
 }
