@@ -37,13 +37,13 @@ static struct thread *thread2;
 
 // FUNCTION DEFINITIONS
 
-noreturn void handler(void *arg) {
+void handler(void *arg) {
     const char *str = arg;
 
-    for (;;) {
-        printf("Hello from thread '%s'\n", str);
-        sleep(2);
-    }
+    // for (;;) {
+    printf("Hello from thread '%s'\n", str);
+    sleep(2);
+    // }
 }
 
 void *get_pc(void) {
@@ -62,7 +62,7 @@ int main(void) {
         "a", "b", "c", "d", "e", "f", "g", "h", "i", "j",
     };
 
-    struct thread *threads[10];
+    struct thread *threads[2];
 
     for (size_t i = 0; i < ARRAY_SIZE(threads); ++i) {
         threads[i] = thread_create(handler, (void *)ids[i]);
@@ -72,17 +72,19 @@ int main(void) {
         thread_start(threads[i]);
     }
 
-    alarm(1);
+    // alarm(1);
     printf("Thread main address: %p\n", &main_thread);
     // // TODO: check how to setup proper offset to jump over the `thread_switch()` call
     // main_frame.rip = (uint64_t)(get_pc()) + 1;
 
     for (;;) {
+        thread_scheduler_call();
+
+        printf("In the idle thread!\n");
+        sleep(2);
         if (should_stop) {
             break;
         }
-
-        sleep(2);
     }
 
     printf("Goodbye!");
