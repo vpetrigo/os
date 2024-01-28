@@ -15,6 +15,7 @@
 
 static struct list_head ready;
 static struct thread *current_thread;
+static struct thread *idle_thread;
 
 // PRIVATE FUNCTION DEFINITIONS
 
@@ -25,7 +26,7 @@ static void thread_set_current(struct thread *this) {
 static void scheduler_tick(int sig_num) {
     struct thread *to_execute = NULL;
     struct thread *me = current_thread;
-    printf(" > scheduler in %p thread\n", current_thread);
+    printf(" > scheduler in %p thread\n", me);
 
     if (!list_empty(&ready)) {
         // execute something
@@ -36,21 +37,26 @@ static void scheduler_tick(int sig_num) {
         printf("Nothing to execute\n");
     }
 
+    printf("Got task: %p\n", to_execute);
+
     if (to_execute == NULL) {
+        printf("To execute == NULL\n");
         // return to main
         return;
     }
-
+    // 1 -> 2
+    // 2
     alarm(1);
     // thead state == ACTIVE
     if (to_execute->state == THREAD_ACTIVE) {
         list_add_tail(&to_execute->node, &ready);
     } else {
-        return;
+        to_execute = idle_thread;
+        current_thread = idle_thread;
     }
 
-    printf(" - switch from %p to %p\n", current_thread, to_execute);
-    thread_switch(current_thread, to_execute);
+    printf(" - switch from %p to %p\n", me, to_execute);
+    thread_switch(me, to_execute);
     printf(" + return to context %p\n", me);
     thread_set_current(me);
 }
@@ -131,6 +137,7 @@ void thread_scheduler_init(struct thread *main_thread) {
     sigaction(SIGALRM, &sa, NULL);
     list_init(&ready);
     current_thread = main_thread;
+    idle_thread = main_thread;
 }
 
 void thread_scheduler_call(void)
