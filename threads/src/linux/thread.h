@@ -15,9 +15,19 @@
 
 typedef void (*thread_entry_f)(void *);
 
+enum thread_state
+{
+    THREAD_ERROR = 0,
+    THREAD_ACTIVE,
+    THREAD_FINISHED,
+    THREAD_BLOCKED,
+    THREAD_DONE,
+};
+
 struct thread
 {
     struct list_head node;
+    enum thread_state state;
     void *context;
 };
 
@@ -48,5 +58,7 @@ void thread_start(struct thread *thread);
 void thread_destroy(struct thread *thread);
 void thread_switch(struct thread *from, struct thread *to);
 void thread_scheduler_init(struct thread *main_thread);
+
+void thread_scheduler_call(void);
 
 #endif /* THREAD_H */
