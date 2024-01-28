@@ -33,26 +33,24 @@ static void scheduler_tick(int sig_num) {
         to_execute = (struct thread *)ready.next;
         list_del(&to_execute->node);
     }
-    else {
-        printf("Nothing to execute\n");
-    }
-
-    printf("Got task: %p\n", to_execute);
 
     if (to_execute == NULL) {
-        printf("To execute == NULL\n");
-        // return to main
+        printf("Nothing to execute\n");
         return;
     }
-    // 1 -> 2
-    // 2
+
     alarm(1);
-    // thead state == ACTIVE
+
     if (to_execute->state == THREAD_ACTIVE) {
         list_add_tail(&to_execute->node, &ready);
     } else {
+        puts("Nothing to execute - run idle");
         to_execute = idle_thread;
         current_thread = idle_thread;
+    }
+
+    if (me == idle_thread && to_execute == idle_thread) {
+        return;
     }
 
     printf(" - switch from %p to %p\n", me, to_execute);
